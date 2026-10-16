@@ -1,0 +1,147 @@
+{
+  "bug_default_ctor": "AttributeError: 'MLPReferencia' object has no attribute 'BiasHiddenValue'",
+  "ref_test_acc": 0.3333333333333333,
+  "ref_test_acc_if_activated": 1.0,
+  "fix_raw_test_acc": 1.0,
+  "fix_norm_test_acc": 1.0,
+  "lr_sweep": {
+    "0.0005": [
+      0.8444444444444444,
+      0.03142696805273544
+    ],
+    "0.001": [
+      0.9,
+      0.07200822998230953
+    ],
+    "0.005": [
+      1.0,
+      0.0
+    ],
+    "0.01": [
+      1.0,
+      0.0
+    ],
+    "0.05": [
+      1.0,
+      0.0
+    ],
+    "0.1": [
+      1.0,
+      0.0
+    ],
+    "0.5": [
+      1.0,
+      0.0
+    ],
+    "1.0": [
+      1.0,
+      0.0
+    ],
+    "2.0": [
+      1.0,
+      0.0
+    ]
+  },
+  "hidden_sweep": {
+    "1": [
+      0.9888888888888889,
+      0.01571348402636772
+    ],
+    "2": [
+      1.0,
+      0.0
+    ],
+    "3": [
+      1.0,
+      0.0
+    ],
+    "4": [
+      1.0,
+      0.0
+    ],
+    "5": [
+      1.0,
+      0.0
+    ],
+    "8": [
+      1.0,
+      0.0
+    ],
+    "16": [
+      1.0,
+      0.0
+    ],
+    "32": [
+      1.0,
+      0.0
+    ]
+  },
+  "act_sweep": {
+    "sigmoid (bias=-1)": [
+      1.0,
+      0.0
+    ],
+    "tanh (bias=-1)": [
+      1.0,
+      0.0
+    ],
+    "relu (bias=-1)": [
+      0.3222222222222222,
+      0.01571348402636772
+    ],
+    "relu (bias=0.0)": [
+      0.8555555555555555,
+      0.1396645009997393
+    ]
+  },
+  "overfit": {
+    "H": 64,
+    "best_val_epoch": 25,
+    "val_acc_best": 1.0,
+    "val_acc_final": 1.0,
+    "train_acc_final": 0.9888888888888889
+  },
+  "overfit_noise": {
+    "best_val_epoch": 50,
+    "val_acc_best": 1.0,
+    "val_acc_final": 0.9666666666666667,
+    "train_acc_final": 0.9222222222222223
+  },
+  "best": {
+    "params": {
+      "InputLayer": 4,
+      "HiddenLayer": 8,
+      "OutputLayer": 3,
+      "Epocas": 800,
+      "LearningRate": 0.05,
+      "BiasHiddenValue": -1,
+      "BiasOutputValue": -1,
+      "ActivationFunction": "sigmoid"
+    },
+    "test_acc": 1.0
+  },
+  "confusion": [
+    [
+      10,
+      0,
+      0
+    ],
+    [
+      0,
+      10,
+      0
+    ],
+    [
+      0,
+      0,
+      10
+    ]
+  ],
+  "per_class_acc": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "petal2_test_acc": 1.0,
+  "sklearn_test_acc": 1.0
+}
