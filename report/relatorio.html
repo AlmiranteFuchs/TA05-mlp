@@ -17,161 +17,158 @@ td, th { border: 1px solid #ccc; padding: 3px 8px; }
 <p>CI1026 - Visão Computacional e Percepção - TA05
 código: https://github.com/AlmiranteFuchs/TA05-mlp</p>
 <h2>1. Introdução</h2>
-<p>A tarefa foi estudar o notebook de referência "MLP from scratch" (adaptado
-de um notebook do Kaggle), ajudar a depurar e descobrir como classificar
-bem as três classes do Iris, analisando convergência, erros e overfitting.</p>
+<p>A tarefa pediu pra estudar o notebook de referência "MLP from scratch"
+(versão adaptada de um notebook do Kaggle), ajudar a depurar e tentar
+descobrir como classificar bem as três classes do Iris, olhando
+convergência, erros e overfitting.</p>
 <p>O Iris tem 150 amostras de 4 features (medidas de sépala e pétala) e 3
 classes. A rede do notebook é um 4-5-3 com sigmoid, erro quadrático e SGD
 por amostra com one-hot na saída.</p>
 <figure><img style="width:88%" src="figs/dataset.png"><figcaption>Figura 1: as 3 classes do Iris: sepas (esq.) quase inseparaveis, petalas (dir.) bem melhores</figcaption></figure>
 
-<p>Spoiler do relatório inteiro: a rede aprende direitinho, mas o predict
-dela joga o aprendizado fora. Treinada por 3000 épocas ela marca 33% de
-acurácia no teste (nível de chute), enquanto a mesma rede, nos mesmos
-pesos, com o predict correto marca 100%. Detalhes abaixo.</p>
+<p>Adiantando o resultado: a rede treina direito, mas o predict dela joga o
+aprendizado fora. Depois de 3000 épocas ela marca 33% no teste (nível de
+chute), e a mesma rede, com os mesmos pesos e o predict corrigido, marca
+100%.</p>
 <h2>2. Depuração do código de referência</h2>
-<p>Portei o notebook fielmente (<code>src/mlp_ref.py</code>, bugs preservados) e escrevi
-uma versão corrigida (<code>src/mlp.py</code>). O que encontrei:</p>
+<p>Copiei o notebook pra dois arquivos: <code>src/mlp_ref.py</code> é o original com os
+bugs preservados, <code>src/mlp.py</code> é a versão corrigida. Bugs que achei:</p>
 <ul>
-<li>O <code>predict</code> não aplica a função de ativação. O forward de treino usa
-  sigmoid nas duas camadas; o predict faz só <code>X @ W1 + b1 @ W2 + b2</code>, um
-  forward linear. Como a ativação escondida também some, a função decidida
-  muda de verdade. Resultado: acc de teste 0.333; trocando só o predict
-  pelo forward com ativação, a mesma rede treinada dá 1.000. A rede
-  aprendia, quem reprovava era o predict.</li>
+<li>O <code>predict</code> não aplica a função de ativação. O forward do treino passa
+  pela sigmoid nas duas camadas, mas o predict faz só <code>X @ W1 + b1 @ W2 +
+  b2</code>, ou seja um forward linear. Como a ativação escondida também some, a
+  função que a rede decide muda de verdade. Na minha seed o teste deu
+  0.333; trocando só o predict pelo forward com ativação, a mesma rede
+  treinada dá 1.000. A rede aprendia, quem reprovava era o predict.</li>
 <li>O bias de saída é atualizado dentro do loop dos neurônios escondidos.
-  <code>BIAS_output[j] -= lr*delta</code> fica dentro do <code>for i in range(hiddenLayer)</code>,
-  então o bias de saída andava 5x por amostra, sempre com o mesmo update
+  O <code>BIAS_output[j] -= lr*delta</code> fica dentro do <code>for i in
+  range(hiddenLayer)</code>, então ele andava 5x por amostra, com o mesmo update
   repetido.</li>
-<li>Os biases nascem como arrays de int (<code>np.array([-1,-1,-1])</code> é int64).
-  O <code>b[j] -= 0.4</code> por elemento trunca pra inteiro em vez de acumular, ou
-  seja, na prática os biases nunca saem de -1 durante o treino. Bug
-  silencioso, não dá erro nenhum.</li>
-<li>O "erro" reportado não é o erro. <code>total_error += square_error</code> fica
-  dentro do loop dos 3 neurônios de saída e soma somas parciais (o erro do
-  neurônio 0 conta 3x, o do 1 conta 2x), com fator 0.05 em vez de 0.5. O
-  número que o fit imprime converge pra ~0.005 enquanto o MSE real fica em
-  ~0.021. A curva bonita do notebook passa uma confiança que o modelo não
-  tem.</li>
-<li><code>params=None</code> quebra na cara: o default grava <code>iasHiddenValue</code> (typo) e
+<li>Os biases nascem como array de int (<code>np.array([-1,-1,-1])</code> vira int64).
+  O <code>b[j] -= 0.4</code> trunca pra inteiro em vez de acumular, então na prática
+  os biases ficam presos em -1 o treino inteiro. Bug silencioso, não
+  aparece erro nenhum.</li>
+<li>O erro que o fit imprime não é o erro de verdade. O <code>total_error +=
+  square_error</code> fica dentro do loop dos 3 neurônios de saída e acumula
+  somas parciais (o erro do neurônio 0 conta 3x, o do 1 conta 2x), com
+  fator 0.05 em vez de 0.5. O número impresso converge pra ~0.005 enquanto
+  o MSE real fica em ~0.021.</li>
+<li><code>params=None</code> quebra na hora: o default grava <code>iasHiddenValue</code> (typo) e
   depois lê <code>self.BiasHiddenValue</code> -&gt; <code>AttributeError</code>.</li>
-<li>Um quirk menor: o erro da camada escondida é propagado com o
-  <code>WEIGHT_output</code> já atualizado (o textbook usa os pesos antigos).
-  Converge quase igual na prática, mas não é o gradiente exato.</li>
+<li>Quirk menor: o delta da camada escondida é calculado com o
+  <code>WEIGHT_output</code> já atualizado (o certo seria usar os pesos antigos). Na
+  prática converge quase igual, mas não é o gradiente exato.</li>
 <li>E faltam coisas que a análise pede: seed, conjunto de validação e
   histórico por época.</li>
 </ul>
 <figure><img style="width:88%" src="figs/debug_baseline.png"><figcaption>Figura 2: esq.: o 'erro' que o codigo de referencia mostra vs. o MSE real da mesma rede; dir.: MSE real da referencia vs. versao corrigida (dados crus)</figcaption></figure>
 
-<p>À esquerda dá pra ver o erro que o código mostra vs. o MSE real da mesma
-rede: a curva "bonita" esconde um MSE ~4x maior. À direita, o MSE real da
-referência vs. a versão corrigida nos mesmos dados crus: a corrigida
-converge mais cedo (o bias de saída certo e o gradiente exato ajudam) e é
-ela que entrega 100% de teste, porque o predict agora concorda com o
-treino.</p>
-<p>Um detalhe engraçado: nos outputs salvos do notebook, a execução do
-próprio professor deu 96.67% (29/30, errou só a única virginica do teste).
-Ou seja, o estrago do predict depende da sorte da inicialização; na minha
-seed ele derrubou tudo pra 33%.</p>
-<h2>3. Setup dos experimentos</h2>
-<p>Split estratificado 80/20 igual ao do notebook (<code>random_state=11</code>):
-120 de treino, 30 de teste. Pra análise de overfitting, um split interno
-de 96 treino / 24 validação. Normalização z-score ajustada só no treino.
-Todos os sweeps com 3 seeds; o que reporto é média +- desvio no teste.</p>
+<p>À esquerda tem o erro que o código mostra vs. o MSE real da mesma rede: a
+curva bonita esconde um MSE ~4x maior. À direita, o MSE real da referência
+vs. a corrigida nos mesmos dados crus: a corrigida converge mais cedo (o
+bias certo e o gradiente exato ajudam) e é ela que dá 100% no teste,
+porque o predict finalmente concorda com o treino.</p>
+<p>Detalhe que eu achei curioso: nos outputs salvos do notebook, a execução
+original deu 96.67% (errou só a única virginica do teste). Ou seja, o
+estrago do predict depende da sorte da inicialização; na minha seed ele
+derrubou tudo pra 33%.</p>
+<h2>3. Setup</h2>
+<p>Mesmo split estratificado 80/20 do notebook (<code>random_state=11</code>): 120 de
+treino, 30 de teste. Pra parte de overfitting, split interno de 96 treino
+/ 24 validação. Normalização z-score ajustada só no treino. Sweeps com 3
+seeds, reporto média +- desvio no teste.</p>
 <h2>4. Convergência</h2>
-<p>Normalização. Com as features cruas (pétala vai de ~1 a 7 cm), a sigmoid
-trabalha saturada e a descida arrasta: as primeiras ~1500 épocas são
-gastas só pra destravar. Padronizando as features, a mesma rede com os
-mesmos pesos iniciais chega a MSE ~0.01 em menos de 400 épocas. A acc
-final é igual (1.0 nos dois casos, a tarefa é fácil), mas a velocidade
-muda tudo na prática.</p>
+<p>Normalização. Com as features cruas (pétala vai de ~1 a 7 cm) a sigmoid
+trabalha saturada e a descida arrasta: as primeiras ~1500 épocas são só
+pra destravar. Com z-score, a mesma rede e os mesmos pesos chegam a MSE
+~0.01 em menos de 400 épocas. A acc final é igual nos dois casos (1.0, a
+tarefa é fácil), mas a velocidade muda tudo na prática.</p>
 <figure><img style="width:88%" src="figs/normalizacao.png"><figcaption>Figura 3: normalizacao z-score: mesma rede, mesmos pesos iniciais, convergencia muito mais rapida</figcaption></figure>
 
 <p>Learning rate. Sweep de 0.0005 a 2.0, rede 4-5-3, sigmoid, dados
-normalizados, 1200 épocas, 3 seeds:</p>
+normalizados, 1200 épocas:</p>
 <pre><code>lr=0.0005   acc=0.844 +- 0.031
 lr=0.001    acc=0.900 +- 0.072
 lr=0.005    acc=1.000 +- 0.000
 lr=0.01..2.0  todos 1.000 +- 0.000
 </code></pre>
-<p>O lr=0.005 do notebook funciona, mas é conservador: a janela útil aqui vai
-de ~0.005 a 2.0. MSE + sigmoid em dados normalizados é bem comportado, e
-nem lr=2.0 diverge (só oscila mais no começo). Abaixo de ~0.005 a rede
-simplesmente não chega lá em 1200 épocas.</p>
+<p>O lr=0.005 do notebook funciona, só é conservador: a janela útil vai de
+~0.005 a 2.0. MSE + sigmoid em dados normalizados é bem comportado, nem
+lr=2.0 diverge (só oscila mais no começo). Abaixo de ~0.005 a rede não
+chega lá nas 1200 épocas.</p>
 <figure><img style="width:88%" src="figs/lr_sweep.png"><figcaption>Figura 4: sweep de learning rate: curvas de MSE por epoca (acc de teste na legenda)</figcaption></figure>
 
-<h2>5. Capacidade e função de ativação</h2>
-<p>Neurônios escondidos. Com lr=0.05: H=1 já dá 0.989 +- 0.016; de H=2 pra
-cima, 1.000 em todas as seeds. Faz sentido, versicolor e virginica são
-quase separáveis linearmente nas pétalas, então a camada escondida precisa
-de pouquíssima capacidade pro Iris.</p>
+<h2>5. Capacidade e ativação</h2>
+<p>Neurônios escondidos, com lr=0.05: H=1 já dá 0.989 +- 0.016; de H=2 pra
+cima dá 1.000 em todas as seeds. Faz sentido: versicolor e virginica são
+quase separáveis linearmente nas pétalas, a camada escondida precisa de
+pouquíssima capacidade pro Iris.</p>
 <figure><img style="width:88%" src="figs/hidden_sweep.png"><figcaption>Figura 5: acuracia de teste vs. neuronios na camada escondida (media +- desvio, 3 seeds)</figcaption></figure>
 
-<p>Ativação. Aqui veio a surpresa do dia (lr=0.05, H=5, 1200 épocas):</p>
+<p>Ativação (lr=0.05, H=5, 1200 épocas):</p>
 <pre><code>sigmoid (bias=-1)   acc=1.000 +- 0.000
 tanh    (bias=-1)   acc=1.000 +- 0.000
 relu    (bias=-1)   acc=0.322 +- 0.016
 relu    (bias= 0)   acc=0.856 +- 0.140
 </code></pre>
-<p>ReLU com bias inicial -1 é uma rede morta: os pré-ativações nascem
-negativos, a saída dos neurônios trava em 0, o gradiente é 0 e nada
-aprende. A rede colapsa prevendo uma classe só (~33%). Subindo o bias pra
-0 ela revive, mas continua instável (uma seed ficou em 0.67). ReLU pede
-uma inicialização melhor que "uniforme +-1 e bias constante". Pra essa
-arquitetura nesse dataset, sigmoid e tanh são as escolhas seguras, e é por
-isso que o notebook original usa sigmoid.</p>
+<p>ReLU com bias -1 é rede morta: os pré-ativações nascem negativos, a saída
+trava em 0, o gradiente é 0 e nada aprende. A rede colapsa prevendo uma
+classe só (~33%). Com bias 0 ela revive, mas segue instável (uma seed
+ficou em 0.67). ReLU aqui pediria uma inicialização melhor que uniforme
++-1 com bias constante. Sigmoid e tanh fecham 100% sem drama, e é por isso
+que o notebook original usa sigmoid.</p>
 <h2>6. Overfitting</h2>
-<p>Com dados limpos não tem overfitting pra mostrar, e isso já é resultado.
-Treinando H=4 e H=64 por 2500 épocas, a validação acompanha o treino o
-tempo todo (val_acc bate 1.0 já na época ~25 e não sai de lá). Iris
-normalizado é separável demais: capacidade extra não degrada a
-generalização, só desperdiça época. Early stopping na melhor validação
-(~época 25-200) economiza ~90% do treino sem custar nada.</p>
+<p>Com dados limpos não aparece overfitting, o que já é um resultado. Treinei
+H=4 e H=64 por 2500 épocas e a validação acompanha o treino o tempo todo
+(val_acc chega em 1.0 perto da época 25 e não sai de lá). O Iris
+normalizado é separável demais: capacidade extra não piora a
+generalização, só gasta época. Early stopping na melhor val (~época
+25-200) economiza ~90% do treino sem custar nada.</p>
 <figure><img style="width:88%" src="figs/overfitting.png"><figcaption>Figura 6: dados limpos: nem H=64 overfitta, val acompanha treino (Iris e separavel demais)</figcaption></figure>
 
-<p>Pra ver o fenômeno de verdade eu injetei 20% de rótulos embaralhados no
-treino. Aí a assinatura clássica aparece no modelo grande: o H=64 vai
-memorizando o ruído, a acurácia de treino (medida contra os rótulos
-ruidosos) sobe até 0.92 enquanto a validação limpa cai de 1.00 pra 0.97, e
-o val_loss faz fundo ~época 1000 e volta a subir com o train_loss ainda
-caindo. O H=4, sem capacidade pra memorizar, segura a validação em 1.0.
-Resumindo: gap treino-val crescendo = overfitting; o remédio aqui é early
-stopping (melhor val na época 50) ou menos capacidade.</p>
+<p>Pra ver o fenômeno de verdade eu embaralhei 20% dos rótulos do treino. Aí
+aparece a assinatura clássica no modelo grande: o H=64 vai memorizando o
+ruído (a acc de treino, medida contra os rótulos errados, sobe até 0.92)
+enquanto a val limpa cai de 1.00 pra 0.97, e o val_loss faz fundo ~época
+1000 e volta a subir com o train_loss ainda caindo. O H=4 não tem
+capacidade pra memorizar e segura a val em 1.0. Ou seja: gap treino-val
+crescendo = overfitting, e aqui a saída é early stopping (melhor val na
+época 50) ou modelo menor.</p>
 <figure><img style="width:88%" src="figs/overfitting_ruido.png"><figcaption>Figura 7: com 20% de ruido nos rotulos: H=64 memoriza o ruido (treino* sobe, val cai; val_loss diverge a partir de ~epoca 1000)</figcaption></figure>
 
 <h2>7. Como classificar bem as três classes</h2>
-<p>Juntando o que os experimentos mostraram, a receita ficou:</p>
+<p>Juntando os experimentos, o que funcionou:</p>
 <ol>
-<li>predict com ativação (o bug nº1; sem isso nada importa)</li>
+<li>predict com ativação (o bug nº1, sem isso nada importa)</li>
 <li>normalizar as features (z-score), destrava a sigmoid e encurta o
    treino umas 4x</li>
 <li>sigmoid ou tanh; relu só com init e bias melhores</li>
-<li>lr ~0.05 (0.005-2.0 funcionam, o 0.005 original é só lento)</li>
-<li>H pequeno basta (H=2 já dá 1.0; usei H=8 por margem)</li>
-<li>early stopping na validação: ~200-800 épocas, não 3000</li>
+<li>lr ~0.05 (de 0.005 a 2.0 funciona, o 0.005 original é só lento)</li>
+<li>H pequeno basta (H=2 já dá 1.0; fiquei com H=8 por margem)</li>
+<li>early stopping na validação, umas 200-800 épocas em vez de 3000</li>
 </ol>
 <p>Config final: <code>4 -&gt; 8 -&gt; 3</code>, sigmoid, lr=0.05, bias=-1, 800 épocas, dados
-normalizados -&gt; 100% no teste (30/30), empatando com
-<code>sklearn.MLPClassifier(8)</code> que também dá 1.0. A matriz de confusão sai
+normalizados -&gt; 100% no teste (30/30). Pra conferir, o
+<code>sklearn.MLPClassifier(8)</code> também dá 1.0. A matriz de confusão sai
 perfeita, nem versicolor vs. virginica escapam.</p>
 <figure><img style="width:88%" src="figs/best_model.png"><figcaption>Figura 8: modelo final (4-8-3, sigmoid, lr=0.05): matriz de confusao e acuracia por classe</figcaption></figure>
 
-<p>E como as pétalas carregam quase toda a informação, uma rede 2-8-3
-treinada só em <code>petal length/width</code> também fecha 100% de teste. As regiões
-de decisão ficam quase lineares, com uma curva suave entre versicolor e
-virginica exatamente onde os pontos se encostam:</p>
+<p>Como as pétalas carregam quase toda a informação, uma rede 2-8-3 treinada
+só em <code>petal length/width</code> também fecha 100% de teste. As regiões de
+decisão ficam quase lineares, com uma curva suave entre versicolor e
+virginica bem onde os pontos se encostam:</p>
 <figure><img style="width:88%" src="figs/decision_regions.png"><figcaption>Figura 9: regioes de decisao de uma rede 2-8-3 treinada so nas features de petala (pontos grandes = teste, pequenos = treino)</figcaption></figure>
 
 <h2>8. Conclusão</h2>
-<p>A implementação de referência tinha a mecânica do backprop correta, os
-sinais de gradiente estão certos, mas cinco bugs em volta (predict linear,
-bias no loop errado, bias int truncado, métrica de erro furada, typo no
-construtor) faziam o notebook reportar uma convergência bonita pra um
-modelo que, na minha seed, errava 2/3 do teste. Depurado, o mesmo MLP com
-normalização e parada cedo acerta 100% das três classes. A dificuldade da
-tarefa estava muito mais no código que no problema. E o Iris só deixa ver
-overfitting quando a gente estraga os rótulos de propósito: aí o modelo
-grande memoriza o ruído na hora e a curva de validação denuncia.</p>
+<p>O backprop da referência estava certo, os sinais de gradiente batem, mas
+cinco bugs em volta (predict linear, bias no loop errado, bias int
+truncado, métrica de erro furada, typo no construtor) faziam o notebook
+mostrar uma convergência bonita pra um modelo que, na minha seed, errava
+2/3 do teste. Depurado, o mesmo MLP com normalização e parada cedo acerta
+100% das três classes. A dificuldade da tarefa tava muito mais no código
+que no problema. E o Iris só deixa ver overfitting quando a gente estraga
+os rótulos de propósito: aí o modelo grande memoriza o ruído e a validação
+mostra.</p>
 <h2>Referências</h2>
 <ul>
 <li>Notebook da disciplina: "Multi-Layer Perceptron from scratch"
