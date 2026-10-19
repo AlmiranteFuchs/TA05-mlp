@@ -24,13 +24,13 @@ subs = {
         "esq.: o 'erro' que o codigo de referencia mostra vs. o MSE real da mesma rede; "
         "dir.: MSE real da referencia vs. versao corrigida (dados crus)"),
     r"\[FIGURA: norm\]": lambda: single("normalizacao.png",
-        "normalizacao z-score: mesma rede, mesmos pesos iniciais — convergencia muito mais rapida"),
+        "normalizacao z-score: mesma rede, mesmos pesos iniciais, convergencia muito mais rapida"),
     r"\[FIGURA: lr\]": lambda: single("lr_sweep.png",
         "sweep de learning rate: curvas de MSE por epoca (acc de teste na legenda)"),
     r"\[FIGURA: hidden\]": lambda: single("hidden_sweep.png",
         "acuracia de teste vs. neuronios na camada escondida (media +- desvio, 3 seeds)"),
     r"\[FIGURA: overfit\]": lambda: single("overfitting.png",
-        "dados limpos: nem H=64 overfitta — val acompanha treino (Iris e separavel demais)"),
+        "dados limpos: nem H=64 overfitta, val acompanha treino (Iris e separavel demais)"),
     r"\[FIGURA: ruido\]": lambda: single("overfitting_ruido.png",
         "com 20% de ruido nos rotulos: H=64 memoriza o ruido (treino* sobe, val cai; "
         "val_loss diverge a partir de ~epoca 1000)"),

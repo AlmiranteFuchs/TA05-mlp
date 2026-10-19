@@ -16,12 +16,12 @@ def md(src):
 def code(src):
     cells.append(nbf.v4.new_code_cell(src))
 
-md("""# TA05 — Experimentos com o MLP from scratch
+md("""# TA05 - Experimentos com o MLP from scratch
 
-CI1026 — Visão Computacional e Percepção (UFPR, Prof. Eduardo Todt)
+CI1026 - Visão Computacional e Percepção (UFPR, Prof. Eduardo Todt)
 
-Estudo e depuração do notebook de referência *"Multi-Layer Perceptron from
-scratch"* (Iris, 3 classes), com análise de convergência, erros e
+Estudo e depuração do notebook de referência "Multi-Layer Perceptron from
+scratch" (Iris, 3 classes), com análise de convergência, erros e
 overfitting. Implementação 100% numpy.""")
 
 code("""import numpy as np
@@ -36,8 +36,8 @@ print(iris.DESCR.split('\\n')[0], '| amostras:', X.shape[0], '| features:', X.sh
 
 md("""## 1. Os dados
 
-Setosa é trivialmente separável; a briga é versicolor × virginica — e as
-features de **pétala** separam muito melhor que as de sépala.""")
+Setosa é trivialmente separável; a briga é versicolor x virginica, e as
+features de pétala separam muito melhor que as de sépala.""")
 
 code("""names = ['setosa', 'versicolor', 'virginica']
 colors = ['#1f77b4', '#2ca02c', '#d62728']
@@ -55,8 +55,8 @@ ax[0].legend(); plt.show()""")
 md("""## 2. Split e normalização
 
 Mesmo split estratificado 80/20 do notebook de referência. O z-score é
-ajustado **só no treino** — e ele importa: sem normalizar, as features
-~1–7 saturam a sigmoid e a convergência arrasta (ver seção 4).""")
+ajustado só no treino, e ele importa: sem normalizar, as features ~1-7
+saturam a sigmoid e a convergência arrasta (ver seção 4).""")
 
 code("""train_X, test_X, train_y, test_y = train_test_split(
     X, y, test_size=0.2, random_state=11, stratify=y)
@@ -65,21 +65,23 @@ scaler = StandardScaler().fit(train_X)
 train_Xn, test_Xn = scaler.transform(train_X), scaler.transform(test_X)
 print('treino:', train_X.shape, '| teste:', test_X.shape)""")
 
-md("""## 3. O MLP — versão corrigida
+md("""## 3. O MLP, versão corrigida
 
 O código de referência tem a mecânica do backprop certa, mas cinco bugs em
 volta dela. O que esta versão corrige:
 
-| # | bug do original | efeito |
-|---|---|---|
-| 1 | `predict` não aplica a ativação (forward linear) | rede treina, predict erra: **acc 33% → 100%** só com esse fix |
-| 2 | `BIAS_output` atualizado dentro do loop dos neurônios escondidos | bias de saída anda `hiddenLayer`× por amostra |
-| 3 | `BIAS_*` como arrays de **int** (`np.array([-1,-1,-1])`) | `b[j] -= 0.4` trunca → bias nunca aprende |
-| 4 | `total_error` acumulado dentro do loop das saídas, fator 0.05 | erro reportado ~4× menor que o MSE real |
-| 5 | typo `iasHiddenValue` | `params=None` → `AttributeError` |
+1. `predict` não aplicava a ativação (forward linear). Só esse fix já leva
+   a mesma rede treinada de 33% pra 100% de acc.
+2. `BIAS_output` era atualizado dentro do loop dos neurônios escondidos,
+   andava `hiddenLayer`x por amostra com o update repetido.
+3. `BIAS_*` era array de int (`np.array([-1,-1,-1])`); o `b[j] -= 0.4`
+   truncava e o bias nunca aprendia.
+4. `total_error` era acumulado dentro do loop das saídas com fator 0.05:
+   o erro impresso saía ~4x menor que o MSE real.
+5. Typo `iasHiddenValue`: `params=None` estoura `AttributeError`.
 
-Extras: seed reproduzível, histórico de loss/acurácia por época (treino e
-validação) e `predict` coerente com o forward de treino.""")
+De quebra: seed reproduzível, histórico de loss/acurácia por época (treino
+e validação) e `predict` coerente com o forward de treino.""")
 
 code("""class MultiLayerPerceptron:
     '''MLP 1 camada escondida, SGD por amostra, MSE + one-hot (como o original).'''
@@ -182,9 +184,9 @@ ax.set_title('sweep de learning rate'); ax.legend(); plt.show()""")
 md("""## 6. Função de ativação: a ReLU morta
 
 Com bias inicial -1 (o default do notebook), a ReLU vira **rede morta**:
-pré-ativações negativos → saída 0 → gradiente 0 → nada aprende, e a rede
+pré-ativações negativos -> saída 0 -> gradiente 0 -> nada aprende, e a rede
 prevê uma classe só (~33%). Bias 0 reanima parcialmente, mas segue
-instável. Sigmoid e tanh fecham 100% — daí a escolha do original.""")
+instável. Sigmoid e tanh fecham 100%, e é por isso que o original usa sigmoid.""")
 
 code("""rows = []
 for act, bias in [('sigmoid', -1), ('tanh', -1), ('relu', -1), ('relu', 0.0)]:
@@ -205,12 +207,12 @@ plt.show()""")
 
 md("""## 7. Overfitting
 
-Com os dados limpos, nem uma rede 4-64-3 overfitta — o Iris é separável
-demais. Para enxergar o fenômeno, injetamos **20% de rótulos embaralhados**
-no treino: o modelo grande memoriza o ruído (acurácia de treino, medida
+Com os dados limpos, nem uma rede 4-64-3 overfitta, o Iris é separável
+demais. Para enxergar o fenômeno, injetei 20% de rótulos embaralhados no
+treino: o modelo grande memoriza o ruído (acurácia de treino, medida
 contra os rótulos ruidosos, sobe) enquanto a validação limpa cai e o
-`val_loss` diverge. O remédio: early stopping na melhor época de validação
-— ou menos capacidade.""")
+`val_loss` diverge. O remédio: early stopping na melhor época de validação,
+ou menos capacidade.""")
 
 code("""tr_X, val_X, tr_y, val_y = train_test_split(
     train_Xn, train_y, test_size=0.25, random_state=7, stratify=train_y)
@@ -234,13 +236,13 @@ for H, c in [(4, '#1f77b4'), (64, '#d62728')]:
         print(f'H=64: melhor val na época {best_ep} (acc={max(h["val_acc"]):.2f}); '
               f'final: val={h["val_acc"][-1]:.2f}, treino*={h["train_acc"][-1]:.2f}')
 axes[0].set_title('MSE (* = contra rótulos ruidosos)'); axes[0].legend()
-axes[1].set_title('acurácia — H=64 memoriza, val cai'); axes[1].legend()
+axes[1].set_title('acurácia - H=64 memoriza, val cai'); axes[1].legend()
 plt.show()""")
 
 md("""## 8. Modelo final
 
 Receita (o que os experimentos mostraram): **predict com ativação + features
-normalizados + sigmoid + lr 0.05 + H=8 + ~800 épocas** → 100% no teste.""")
+normalizados + sigmoid + lr 0.05 + H=8 + ~800 épocas** -> 100% no teste.""")
 
 code("""best = MultiLayerPerceptron(hidden=8, lr=0.05, epochs=800, seed=0)
 best.fit(train_Xn, train_y, log_every=999)
@@ -266,7 +268,7 @@ ax[1].set_ylim(0, 105); ax[1].set_ylabel('%'); ax[1].set_title('acurácia por cl
 plt.show()""")
 
 md("""E como as pétalas carregam quase tudo, uma rede 2-8-3 treinada só em
-`petal length/width` também fecha 100% — as regiões de decisão:""")
+`petal length/width` também fecha 100%. As regiões de decisão:""")
 
 code("""sc2 = StandardScaler().fit(train_X[:, 2:4])
 m2 = MultiLayerPerceptron(input_dim=2, hidden=8, lr=0.05, epochs=800, seed=0)
@@ -288,9 +290,9 @@ plt.show()""")
 md("""## 9. Conclusões
 
 - O backprop da referência estava certo; os bugs em volta é que derrubavam
-  o resultado — principalmente o `predict` sem ativação (33% → 100%).
+  o resultado, principalmente o `predict` sem ativação (33% -> 100%).
 - Para classificar bem as 3 classes: normalizar, sigmoid/tanh, lr ~0.05,
-  H pequeno e early stopping → **100% no teste**, sem mistério.
+  H pequeno e early stopping -> 100% no teste, sem mistério.
 - Overfitting no Iris limpo não aparece nem com H=64; com rótulos
   ruidosos, o modelo grande memoriza e a validação denuncia.""")
 

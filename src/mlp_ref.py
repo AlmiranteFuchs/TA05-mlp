@@ -3,7 +3,7 @@
 Serve so para comparacao: mede o "erro" do jeito que o original mede
 (e reporta errado) e tambem as metricas verdadeiras por epoca.
 Diferencas em relacao ao notebook: sem plots/pandas dentro do fit e com
-seed controlada para reproducibilidade — o resto e identico, bugs inclusos.
+seed controlada para reproducibilidade - o resto e identico, bugs inclusos.
 """
 import numpy as np
 import pandas as pd

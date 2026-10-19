@@ -1,4 +1,4 @@
-"""MLP from scratch (numpy) — versao corrigida da implementacao de referencia.
+"""MLP from scratch (numpy) - versao corrigida da implementacao de referencia.
 
 Mesma arquitetura do notebook da disciplina (1 camada escondida, one-hot,
 SGD por amostra, MSE), com os bugs corrigidos e instrumentacao de

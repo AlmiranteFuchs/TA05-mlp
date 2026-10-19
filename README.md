@@ -24,13 +24,13 @@ jupyter nbconvert --to notebook --execute notebook.ipynb --inplace
 
 ## Layout
 
-- `ref_mlp_from_scratch.ipynb` — notebook de referência da disciplina (baixado)
-- `src/mlp_ref.py` — port fiel da referência, **bugs preservados** (comparação)
-- `src/mlp.py` — MLP corrigido (numpy puro), com histórico treino/val por época
-- `src/run_experiments.py` — todos os experimentos do relatório
-- `notebook.ipynb` — notebook entregável (narrativa + experimentos executados)
-- `report/` — relatório (md -> html -> pdf) e figuras
-- `out/` — `results.json` com os números dos sweeps
+- `ref_mlp_from_scratch.ipynb` - notebook de referência da disciplina (baixado)
+- `src/mlp_ref.py` - port fiel da referência, **bugs preservados** (comparação)
+- `src/mlp.py` - MLP corrigido (numpy puro), com histórico treino/val por época
+- `src/run_experiments.py` - todos os experimentos do relatório
+- `notebook.ipynb` - notebook entregável (narrativa + experimentos executados)
+- `report/` - relatório (md -> html -> pdf) e figuras
+- `out/` - `results.json` com os números dos sweeps
 
 ## Resumo dos achados
 
