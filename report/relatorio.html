@@ -15,6 +15,7 @@ table { border-collapse: collapse; font-size: 12px; }
 td, th { border: 1px solid #ccc; padding: 3px 8px; }
 </style></head><body><h1>Experimentos com um MLP implementado do zero</h1>
 <p>CI1026 - Visão Computacional e Percepção - TA05
+Efi Fuchs Santos da Silva, Bruno Wavrzenczak, Edisson Luiz Matias Junior
 código: https://github.com/AlmiranteFuchs/TA05-mlp</p>
 <h2>1. Introdução</h2>
 <p>A tarefa pediu pra estudar o notebook de referência "MLP from scratch"
@@ -31,13 +32,13 @@ aprendizado fora. Depois de 3000 épocas ela marca 33% no teste (nível de
 chute), e a mesma rede, com os mesmos pesos e o predict corrigido, marca
 100%.</p>
 <h2>2. Depuração do código de referência</h2>
-<p>Copiei o notebook pra dois arquivos: <code>src/mlp_ref.py</code> é o original com os
-bugs preservados, <code>src/mlp.py</code> é a versão corrigida. Bugs que achei:</p>
+<p>Copiamos o notebook pra dois arquivos: <code>src/mlp_ref.py</code> é o original com
+os bugs preservados, <code>src/mlp.py</code> é a versão corrigida. Bugs que achamos:</p>
 <ul>
 <li>O <code>predict</code> não aplica a função de ativação. O forward do treino passa
   pela sigmoid nas duas camadas, mas o predict faz só <code>X @ W1 + b1 @ W2 +
   b2</code>, ou seja um forward linear. Como a ativação escondida também some, a
-  função que a rede decide muda de verdade. Na minha seed o teste deu
+  função que a rede decide muda de verdade. Na nossa seed o teste deu
   0.333; trocando só o predict pelo forward com ativação, a mesma rede
   treinada dá 1.000. A rede aprendia, quem reprovava era o predict.</li>
 <li>O bias de saída é atualizado dentro do loop dos neurônios escondidos.
@@ -68,15 +69,15 @@ curva bonita esconde um MSE ~4x maior. À direita, o MSE real da referência
 vs. a corrigida nos mesmos dados crus: a corrigida converge mais cedo (o
 bias certo e o gradiente exato ajudam) e é ela que dá 100% no teste,
 porque o predict finalmente concorda com o treino.</p>
-<p>Detalhe que eu achei curioso: nos outputs salvos do notebook, a execução
-original deu 96.67% (errou só a única virginica do teste). Ou seja, o
-estrago do predict depende da sorte da inicialização; na minha seed ele
-derrubou tudo pra 33%.</p>
+<p>Detalhe que a gente achou curioso: nos outputs salvos do notebook, a
+execução original deu 96.67% (errou só a única virginica do teste). Ou
+seja, o estrago do predict depende da sorte da inicialização; na nossa
+seed ele derrubou tudo pra 33%.</p>
 <h2>3. Setup</h2>
 <p>Mesmo split estratificado 80/20 do notebook (<code>random_state=11</code>): 120 de
 treino, 30 de teste. Pra parte de overfitting, split interno de 96 treino
 / 24 validação. Normalização z-score ajustada só no treino. Sweeps com 3
-seeds, reporto média +- desvio no teste.</p>
+seeds, reportamos média +- desvio no teste.</p>
 <h2>4. Convergência</h2>
 <p>Normalização. Com as features cruas (pétala vai de ~1 a 7 cm) a sigmoid
 trabalha saturada e a descida arrasta: as primeiras ~1500 épocas são só
@@ -118,15 +119,17 @@ ficou em 0.67). ReLU aqui pediria uma inicialização melhor que uniforme
 +-1 com bias constante. Sigmoid e tanh fecham 100% sem drama, e é por isso
 que o notebook original usa sigmoid.</p>
 <h2>6. Overfitting</h2>
-<p>Com dados limpos não aparece overfitting, o que já é um resultado. Treinei
-H=4 e H=64 por 2500 épocas e a validação acompanha o treino o tempo todo
+<p>Com dados limpos não aparece overfitting, o que já é um resultado.
+Treinamos H=4 e H=64 por 2500 épocas e a validação acompanha o treino o
+tempo todo
 (val_acc chega em 1.0 perto da época 25 e não sai de lá). O Iris
 normalizado é separável demais: capacidade extra não piora a
 generalização, só gasta época. Early stopping na melhor val (~época
 25-200) economiza ~90% do treino sem custar nada.</p>
 <figure><img style="width:88%" src="figs/overfitting.png"><figcaption>Figura 6: dados limpos: nem H=64 overfitta, val acompanha treino (Iris e separavel demais)</figcaption></figure>
 
-<p>Pra ver o fenômeno de verdade eu embaralhei 20% dos rótulos do treino. Aí
+<p>Pra ver o fenômeno de verdade a gente embaralhou 20% dos rótulos do
+treino. Aí
 aparece a assinatura clássica no modelo grande: o H=64 vai memorizando o
 ruído (a acc de treino, medida contra os rótulos errados, sobe até 0.92)
 enquanto a val limpa cai de 1.00 pra 0.97, e o val_loss faz fundo ~época
@@ -144,7 +147,7 @@ crescendo = overfitting, e aqui a saída é early stopping (melhor val na
    treino umas 4x</li>
 <li>sigmoid ou tanh; relu só com init e bias melhores</li>
 <li>lr ~0.05 (de 0.005 a 2.0 funciona, o 0.005 original é só lento)</li>
-<li>H pequeno basta (H=2 já dá 1.0; fiquei com H=8 por margem)</li>
+<li>H pequeno basta (H=2 já dá 1.0; ficamos com H=8 por margem)</li>
 <li>early stopping na validação, umas 200-800 épocas em vez de 3000</li>
 </ol>
 <p>Config final: <code>4 -&gt; 8 -&gt; 3</code>, sigmoid, lr=0.05, bias=-1, 800 épocas, dados
@@ -163,7 +166,7 @@ virginica bem onde os pontos se encostam:</p>
 <p>O backprop da referência estava certo, os sinais de gradiente batem, mas
 cinco bugs em volta (predict linear, bias no loop errado, bias int
 truncado, métrica de erro furada, typo no construtor) faziam o notebook
-mostrar uma convergência bonita pra um modelo que, na minha seed, errava
+mostrar uma convergência bonita pra um modelo que, na nossa seed, errava
 2/3 do teste. Depurado, o mesmo MLP com normalização e parada cedo acerta
 100% das três classes. A dificuldade da tarefa tava muito mais no código
 que no problema. E o Iris só deixa ver overfitting quando a gente estraga

@@ -20,6 +20,8 @@ md("""# TA05 - Experimentos com o MLP from scratch
 
 CI1026 - Visão Computacional e Percepção (UFPR, Prof. Eduardo Todt)
 
+Efi Fuchs Santos da Silva, Bruno Wavrzenczak, Edisson Luiz Matias Junior
+
 Estudo e depuração do notebook de referência "Multi-Layer Perceptron from
 scratch" (Iris, 3 classes), com análise de convergência, erros e
 overfitting. Implementação 100% numpy.""")
@@ -208,7 +210,7 @@ plt.show()""")
 md("""## 7. Overfitting
 
 Com os dados limpos, nem uma rede 4-64-3 overfitta, o Iris é separável
-demais. Para enxergar o fenômeno, injetei 20% de rótulos embaralhados no
+demais. Para enxergar o fenômeno, injetamos 20% de rótulos embaralhados no
 treino: o modelo grande memoriza o ruído (acurácia de treino, medida
 contra os rótulos ruidosos, sobe) enquanto a validação limpa cai e o
 `val_loss` diverge. O remédio: early stopping na melhor época de validação,

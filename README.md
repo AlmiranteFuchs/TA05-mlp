@@ -2,6 +2,8 @@
 
 CI1026 - Visão Computacional e Percepção (UFPR, Prof. Eduardo Todt)
 
+Efi Fuchs Santos da Silva, Bruno Wavrzenczak, Edisson Luiz Matias Junior
+
 Estudo, depuração e experimentos sobre o notebook de referência
 "MLP from scratch" (Iris, 3 classes): port fiel do código original com os
 bugs preservados, versão corrigida, e sweeps de convergência, capacidade,
